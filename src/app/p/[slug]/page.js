@@ -2,10 +2,16 @@ import prisma from '../../../lib/prisma';
 import { notFound } from 'next/navigation';
 
 export default async function CustomPage({ params }) {
-    const { slug } = await params;
-    const page = await prisma.page.findUnique({
-        where: { slug }
-    });
+    let page = null;
+
+    try {
+        const { slug } = await params;
+        page = await prisma.page.findUnique({
+            where: { slug }
+        });
+    } catch (e) {
+        console.error('Custom page DB error:', e?.message);
+    }
 
     if (!page) {
         notFound();
@@ -32,12 +38,17 @@ export default async function CustomPage({ params }) {
 
 // Generate metadata dynamically
 export async function generateMetadata({ params }) {
-    const { slug } = await params;
-    const page = await prisma.page.findUnique({
-        where: { slug }
-    });
+    try {
+        const { slug } = await params;
+        const page = await prisma.page.findUnique({
+            where: { slug }
+        });
 
-    return {
-        title: page ? `${page.title} | QORVEX` : 'صفحة غير موجودة'
-    };
+        return {
+            title: page ? `${page.title} | QORVEX` : 'صفحة غير موجودة'
+        };
+    } catch (e) {
+        console.error('Custom page metadata DB error:', e?.message);
+        return { title: 'QORVEX' };
+    }
 }

@@ -4,19 +4,24 @@ import prisma from '../lib/prisma';
 export const revalidate = 0; // Disable static rendering for realtime products
 
 export default async function Home() {
-  const products = await prisma.product.findMany({
-    where: { isActive: true }, orderBy: { createdAt: 'desc' },
-    take: 6 // فقط أحدث 6 منتجات كما طلب المستخدم
-  });
-
-  const settingsRecords = await prisma.setting.findMany({
-    where: {
-      key: { in: ['heroTitle', 'heroSubtitle', 'heroCtaPrimaryText', 'heroCtaPrimaryUrl', 'heroCtaSecondaryText', 'heroCtaSecondaryUrl', 'homeProductsTitle'] }
-    }
-  });
-
+  let products = [];
   const settings = {};
-  settingsRecords.forEach(s => { settings[s.key] = s.value; });
+
+  try {
+    products = await prisma.product.findMany({
+      where: { isActive: true }, orderBy: { createdAt: 'desc' },
+      take: 6
+    });
+
+    const settingsRecords = await prisma.setting.findMany({
+      where: {
+        key: { in: ['heroTitle', 'heroSubtitle', 'heroCtaPrimaryText', 'heroCtaPrimaryUrl', 'heroCtaSecondaryText', 'heroCtaSecondaryUrl', 'homeProductsTitle'] }
+      }
+    });
+    settingsRecords.forEach(s => { settings[s.key] = s.value; });
+  } catch (e) {
+    console.error('Home page DB error:', e?.message);
+  }
 
   const heroTitle = settings.heroTitle || 'اكتشف الفخامة والأناقة في <span class="text-gradient">مكان واحد</span>';
   const heroSubtitle = settings.heroSubtitle || 'منتجات مميزة، خدمة ممتازة، تسوق بثقة، دائمًا.';

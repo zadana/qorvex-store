@@ -11,7 +11,9 @@ export async function generateMetadata() {
       if (s.key === 'storeName') title = s.value;
       if (s.key === 'storeDescription') description = s.value;
     });
-  } catch (e) { }
+  } catch (e) {
+    console.error('Metadata DB error:', e?.message);
+  }
   return { title, description };
 }
 
@@ -34,13 +36,15 @@ export default async function RootLayout({ children }) {
         footerSettings[s.key] = s.value;
       }
       if (s.key === 'topMenu') {
-        headerSettings.menus = JSON.parse(s.value);
+        try { headerSettings.menus = JSON.parse(s.value); } catch (pe) { }
       }
       if (s.key === 'storeName') {
         headerSettings.storeName = s.value;
       }
     });
-  } catch (e) { }
+  } catch (e) {
+    console.error('Layout DB error:', e?.message);
+  }
 
   return (
     <html lang="ar" dir="rtl">

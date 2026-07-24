@@ -6,28 +6,66 @@ import Link from 'next/link';
 
 // Dynamic SEO Generation
 export async function generateMetadata({ params }) {
-    const { id } = await params;
-    const product = await prisma.product.findUnique({ where: { id } });
+    try {
+        const { id } = await params;
+        const product = await prisma.product.findUnique({ where: { id } });
 
-    if (!product) {
-        return { title: 'المنتج غير موجود' }
-    }
+        if (!product) {
+            return { title: 'المنتج غير موجود' }
+        }
 
-    return {
-        title: `${product.title} | متجري`,
-        description: product.description.substring(0, 160),
-        openGraph: {
-            images: [product.image],
-        },
+        return {
+            title: `${product.title} | متجري`,
+            description: product.description.substring(0, 160),
+            openGraph: {
+                images: [product.image],
+            },
+        }
+    } catch (e) {
+        console.error('Product metadata DB error:', e?.message);
+        return { title: 'المنتج' };
     }
 }
 
 export default async function ProductDetails({ params }) {
-    const { id } = await params;
-    const product = await prisma.product.findUnique({
-        where: { id },
-        include: { reviews: { orderBy: { createdAt: 'desc' } } }
-    });
+    let product = null;
+    let relatedProducts = [];
+    let globalFeaturesList = ['شحن مجاني للطلبات فوق 500 ر.س', 'إرجاع مجاني خلال 14 يوماً', 'دفع آمن 100%'];
+    let dbError = false;
+
+    try {
+        const { id } = await params;
+        product = await prisma.product.findUnique({
+            where: { id },
+            include: { reviews: { orderBy: { createdAt: 'desc' } } }
+        });
+
+        if (product) {
+            // Fetch related products (Cross-sell / Upsell)
+            relatedProducts = await prisma.product.findMany({
+                where: { id: { not: id } },
+                take: 4,
+                orderBy: { createdAt: 'desc' }
+            });
+
+            const settings = await prisma.setting.findMany({ where: { key: 'productFeatures' } });
+            const globalRawFeatures = settings.length > 0 && settings[0].value ? settings[0].value : 'شحن مجاني للطلبات فوق 500 ر.س\nإرجاع مجاني خلال 14 يوماً\nدفع آمن 100%';
+            globalFeaturesList = globalRawFeatures.split('\n').filter(f => f.trim() !== '');
+        }
+    } catch (e) {
+        console.error('Product details DB error:', e?.message);
+        dbError = true;
+    }
+
+    if (dbError) {
+        return (
+            <>
+                <main className="container" style={{ paddingTop: '150px', textAlign: 'center', direction: 'rtl' }}>
+                    <h2>حدث خطأ في تحميل المنتج. يرجى المحاولة لاحقاً.</h2>
+                </main>
+            </>
+        );
+    }
 
     if (!product) {
         return (
@@ -38,17 +76,6 @@ export default async function ProductDetails({ params }) {
             </>
         );
     }
-
-    // Fetch related products (Cross-sell / Upsell)
-    const relatedProducts = await prisma.product.findMany({
-        where: { id: { not: id } },
-        take: 4,
-        orderBy: { createdAt: 'desc' } // Could also order by random, but prisma doesn't support rand() easily.
-    });
-
-    const settings = await prisma.setting.findMany({ where: { key: 'productFeatures' } });
-    const globalRawFeatures = settings.length > 0 && settings[0].value ? settings[0].value : 'شحن مجاني للطلبات فوق 500 ر.س\nإرجاع مجاني خلال 14 يوماً\nدفع آمن 100%';
-    const globalFeaturesList = globalRawFeatures.split('\n').filter(f => f.trim() !== '');
 
     const hasCustomFeatures = !!product.features && product.features.trim() !== '';
 

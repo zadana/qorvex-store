@@ -10,29 +10,36 @@ export default async function ProductsPage({ searchParams }) {
     const search = awaitedParams?.search || '';
     const categoryId = awaitedParams?.category || 'all';
 
-    const categories = await prisma.category.findMany();
+    let categories = [];
+    let products = [];
 
-    let whereClause = { isActive: true };
+    try {
+        categories = await prisma.category.findMany();
 
-    if (search) {
-        whereClause.OR = [
-            { title: { contains: search } },
-            { description: { contains: search } }
-        ];
+        let whereClause = { isActive: true };
+
+        if (search) {
+            whereClause.OR = [
+                { title: { contains: search } },
+                { description: { contains: search } }
+            ];
+        }
+
+        if (categoryId && categoryId !== 'all') {
+            whereClause.categories = {
+                some: {
+                    categoryId: categoryId
+                }
+            };
+        }
+
+        products = await prisma.product.findMany({
+            where: whereClause,
+            orderBy: { createdAt: 'desc' }
+        });
+    } catch (e) {
+        console.error('Products page DB error:', e?.message);
     }
-
-    if (categoryId && categoryId !== 'all') {
-        whereClause.categories = {
-            some: {
-                categoryId: categoryId
-            }
-        };
-    }
-
-    const products = await prisma.product.findMany({
-        where: whereClause,
-        orderBy: { createdAt: 'desc' }
-    });
 
     return (
         <>

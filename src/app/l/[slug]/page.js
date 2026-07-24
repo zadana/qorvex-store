@@ -5,29 +5,39 @@ import Link from 'next/link';
 export const revalidate = 0;
 
 export async function generateMetadata({ params }) {
-    const { slug } = await params;
-    const landing = await prisma.landingPage.findUnique({
-        where: { slug },
-        include: { product: true }
-    });
+    try {
+        const { slug } = await params;
+        const landing = await prisma.landingPage.findUnique({
+            where: { slug },
+            include: { product: true }
+        });
 
-    if (!landing) {
-        return { title: 'الصفحة غير موجودة' }
-    }
+        if (!landing) {
+            return { title: 'الصفحة غير موجودة' }
+        }
 
-    return {
-        title: `${landing.heroTitle || landing.product.title} - اطلب الآن`,
-        description: (landing.heroSubtitle || landing.product.description || '').substring(0, 160),
+        return {
+            title: `${landing.heroTitle || landing.product.title} - اطلب الآن`,
+            description: (landing.heroSubtitle || landing.product.description || '').substring(0, 160),
+        }
+    } catch (e) {
+        console.error('Landing metadata DB error:', e?.message);
+        return { title: 'الصفحة' };
     }
 }
 
 export default async function LandingPage({ params }) {
-    const { slug } = await params;
+    let landing = null;
 
-    const landing = await prisma.landingPage.findUnique({
-        where: { slug },
-        include: { product: true }
-    });
+    try {
+        const { slug } = await params;
+        landing = await prisma.landingPage.findUnique({
+            where: { slug },
+            include: { product: true }
+        });
+    } catch (e) {
+        console.error('Landing page DB error:', e?.message);
+    }
 
     if (!landing || !landing.product) {
         return (
