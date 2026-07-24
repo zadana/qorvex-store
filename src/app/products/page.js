@@ -1,8 +1,6 @@
 import ProductCard from '../../components/ProductCard';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../lib/prisma';
 import ProductFilters from './ProductFilters';
-
-const prisma = new PrismaClient();
 
 export const revalidate = 0; // Disable static rendering for realtime products
 

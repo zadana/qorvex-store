@@ -1,12 +1,11 @@
 import "./globals.css";
 import ClientLayout from "./ClientLayout";
-import { PrismaClient } from '@prisma/client';
+import prisma from "../lib/prisma";
 
 export async function generateMetadata() {
   let title = "QORVEX";
   let description = "منتجات مميزة، خدمة ممتازة، تسوق بثقة، دائمًا.";
   try {
-    const prisma = new PrismaClient();
     const st = await prisma.setting.findMany({ where: { key: { in: ['storeName', 'storeDescription'] } } });
     st.forEach(s => {
       if (s.key === 'storeName') title = s.value;
@@ -21,7 +20,6 @@ export default async function RootLayout({ children }) {
   let headerSettings = { menus: [{ title: 'الرئيسية', url: '/' }, { title: 'المنتجات', url: '/products' }], storeName: 'QORVEX' };
 
   try {
-    const prisma = new PrismaClient();
     const settingsObj = await prisma.setting.findMany({
       where: {
         OR: [
