@@ -1,0 +1,17 @@
+
+> store@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.11 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.29.39.153:3000
+- Environments: .env
+✓ Ready in 331ms
+
+ PUT /api/products/cmrwrqnjb0000zt385j0ayjae 200 in 640ms (next.js: 621ms, application-code: 19ms)
+ GET / 200 in 234ms (next.js: 84ms, application-code: 150ms)
+ POST /api/track 200 in 36ms (next.js: 28ms, application-code: 9ms)
+ GET /products 200 in 78ms (next.js: 47ms, application-code: 31ms)
+ POST /api/track 200 in 13ms (next.js: 3ms, application-code: 9ms)
+ GET /products/cmrwywq1x0000v9lhoo7pd7x9 200 in 368ms (next.js: 344ms, application-code: 24ms)
+ POST /api/track 200 in 6ms (next.js: 1475µs, application-code: 5ms)
